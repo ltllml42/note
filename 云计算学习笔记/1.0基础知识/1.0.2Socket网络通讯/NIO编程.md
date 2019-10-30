@@ -507,7 +507,7 @@ public class SocketDemo {
                 if(sk.isAcceptable()){
                     //10.若“接收就绪”，获取客户端连接
                     SocketChannel sChannel = ssc.accept();
-                    //11.切换费阻塞模式
+                    //11.切换费阻塞模式 
                     sChannel.configureBlocking(false);
                     //12.将该通道注册到选择器上
                     sChannel.register(selector,SelectionKey.OP_READ);
