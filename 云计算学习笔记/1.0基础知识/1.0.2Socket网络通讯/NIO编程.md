@@ -531,7 +531,14 @@ public class SocketDemo {
 }
 
 ```
-
+选择KEY 
+1、SelectionKey.OP_CONNECT
+2、SelectionKey.OP_ACCEPT
+3、SelectionKey.OP_READ
+4、SelectionKey.OP_WRITE
+如果你对不止一种事件感兴趣，那么可以用“位或”操作符将常量连接起来，如下：
+int interestSet = SelectionKey.OP_READ | SelectionKey.OP_WRITE;
+在SelectionKey类的源码中我们可以看到如下的4中属性，四个变量用来表示四种不同类型的事件：可读、可写、可连接、可接受连接
 
 
 
