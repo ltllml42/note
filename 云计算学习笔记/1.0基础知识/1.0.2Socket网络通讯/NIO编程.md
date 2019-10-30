@@ -150,3 +150,49 @@ public class Test004 {
  **直接缓冲区**：
  通过 allocateDirect() 方法分配直接缓冲区，将缓冲区建立在物理内存中。可以
 ![直接缓冲区](https://github.com/ltllml42/img/2019/10/29/1572352560939.png)
+
+
+
+
+### 案例：
+```java
+// 使用直接缓冲区完成文件的复制(内存映射文件)
+	static public void test2() throws IOException {
+		long start = System.currentTimeMillis();
+		FileChannel inChannel = FileChannel.open(Paths.get("f://1.mp4"), StandardOpenOption.READ);
+		FileChannel outChannel = FileChannel.open(Paths.get("f://2.mp4"), StandardOpenOption.WRITE,
+				StandardOpenOption.READ, StandardOpenOption.CREATE);
+		// 内存映射文件
+		MappedByteBuffer inMappedByteBuf = inChannel.map(MapMode.READ_ONLY, 0, inChannel.size());
+		MappedByteBuffer outMappedByteBuffer = outChannel.map(MapMode.READ_WRITE, 0, inChannel.size());
+		// 直接对缓冲区进行数据的读写操作
+		byte[] dsf = new byte[inMappedByteBuf.limit()];
+		inMappedByteBuf.get(dsf);
+		outMappedByteBuffer.put(dsf);
+		inChannel.close();
+		outChannel.close();
+		long end = System.currentTimeMillis();
+		System.out.println(end - start);
+	}
+
+	// 1.利用通道完成文件的复制(非直接缓冲区)
+	static public void test1() throws IOException { // 4400
+		long start = System.currentTimeMillis();
+		FileInputStream fis = new FileInputStream("f://1.mp4");
+		FileOutputStream fos = new FileOutputStream("f://2.mp4");
+		// ①获取通道
+		FileChannel inChannel = fis.getChannel();
+		FileChannel outChannel = fos.getChannel();
+		// ②分配指定大小的缓冲区
+		ByteBuffer buf = ByteBuffer.allocate(1024);
+		while (inChannel.read(buf) != -1) {
+			buf.flip();// 切换为读取数据
+			// ③将缓冲区中的数据写入通道中
+			outChannel.write(buf);
+			buf.clear();
+		}
+		outChannel.close();
+		inChannel.close();
+		fos.close();
+
+```
