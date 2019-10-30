@@ -195,7 +195,7 @@ public class Test004 {
 					e.printStackTrace();
 				}
 			}
-			
+		
 			if(fis != null){
 				try {
 					fis.close();
@@ -203,11 +203,9 @@ public class Test004 {
 					e.printStackTrace();
 				}
 			}
-		}
-		
+		}	
 		long end = System.currentTimeMillis();
 		System.out.println("耗费时间为：" + (end - start));
-		
 	}
  ```
 
