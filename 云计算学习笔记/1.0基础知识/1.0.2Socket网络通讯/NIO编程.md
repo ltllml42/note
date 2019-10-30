@@ -194,5 +194,4 @@ public class Test004 {
 		outChannel.close();
 		inChannel.close();
 		fos.close();
-
 ```
