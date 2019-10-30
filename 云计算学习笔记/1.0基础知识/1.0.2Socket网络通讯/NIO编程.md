@@ -310,13 +310,10 @@ transferTo()
 	@Test
 	public void test6() throws IOException{
 		Charset cs1 = Charset.forName("GBK");
-		
 		//获取编码器
 		CharsetEncoder ce = cs1.newEncoder();
-		
 		//获取解码器
 		CharsetDecoder cd = cs1.newDecoder();
-		
 		CharBuffer cBuf = CharBuffer.allocate(1024);
 		cBuf.put("尚硅谷威武！");
 		cBuf.flip();
@@ -340,7 +337,6 @@ transferTo()
 		CharBuffer cBuf3 = cs2.decode(bBuf);
 		System.out.println(cBuf3.toString());
 	}
-	
 
 ```
 
@@ -390,6 +386,158 @@ transferTo()
 ```
 
 ## NIO 网络通信
+
+
+**传统的 IO 流都是阻塞式的**。也就是说，当一个线程调用 read() 或 write() 时，该线程被阻塞，直到有一些数据被读取或写入，该线程在此期间不 能执行其他任务。因此，在完成网络通信进行 IO 操作时，由于线程会 阻塞，所以服务器端必须为每个客户端都提供一个独立的线程进行处理， 当服务器端需要处理大量客户端时，性能急剧下降。
+
+```java?linenums
+   @Test
+    public void client() throws IOException {
+        //获取通道
+        SocketChannel socket = SocketChannel.open(new InetSocketAddress("127.0.0.1",8080));
+        /**
+         * java.nio.file.StandardOpenOption
+         *
+         * READ	    以读取方式打开文件
+         * WRITE　　	已写入方式打开文件
+         * CREATE	如果文件不存在，创建
+         * CREATE_NEW	如果文件不存在，创建；若存在，异常。
+         * APPEND	在文件的尾部追加
+         * DELETE_ON_CLOSE	当流关闭的时候删除文件
+         * TRUNCATE_EXISTING	把文件设置为0字节
+         * SPARSE	文件不够时创建新的文件
+         * SYNC	同步文件的内容和元数据信息随着底层存储设备
+         * DSYNC	同步文件的内容随着底层存储设备
+         *
+         */
+        FileChannel fileChannel = FileChannel.open(Paths.get("D:\\ideaproject\\jeeSpringCloud\\cloud\\cloud-base\\src\\main\\java\\1.txt"), StandardOpenOption.READ);
+
+        //2.分配指定大小的缓冲区
+        ByteBuffer buf = ByteBuffer.allocate(1024);
+        //3.读取本地文件，并发送到服务端
+        while (fileChannel.read(buf)!=-1){
+            //将缓冲器切换到读模式
+            buf.flip();
+            socket.write(buf);
+            buf.clear();
+        }
+		
+		socket.shutdownOutput();
+        //关闭通道
+        fileChannel.close();
+        socket.close();
+    }
+
+    @Test
+    public void server() throws IOException {
+        //1.获取通道
+        ServerSocketChannel ssc = ServerSocketChannel.open();
+        //2.绑定连接
+        ssc.bind(new InetSocketAddress(8080));
+        //3.获取客户端连接的通道
+        SocketChannel sChannel = ssc.accept();
+
+        FileChannel file = FileChannel.open(Paths.get("D:\\ideaproject\\jeeSpringCloud\\cloud\\cloud-base\\src\\main\\java\\2.txt"),StandardOpenOption.WRITE,StandardOpenOption.CREATE);
+
+        ByteBuffer buf = ByteBuffer.allocate(1024);
+
+        //4.分配指定大小的缓冲区
+        while(sChannel.read(buf)!=-1){
+            buf.flip();
+            //5.接受客户端的数据，并保存到本地
+            file.write(buf);
+            buf.clear();
+        }
+        //6.关闭通道
+        file.close();
+        sChannel.close();
+    }
+
+```
+
+
+
+**Java NIO 是非阻塞模式的**。当线程从某通道进行读写数据时，若没有数 据可用时，该线程可以进行其他任务。线程通常将非阻塞 IO 的空闲时 间用于在其他通道上执行 IO 操作，所以单独的线程可以管理多个输入 和输出通道。因此，NIO 可以让服务器端使用一个或有限几个线程来同 时处理连接到服务器端的所有客户端。
+
+
+```java?linenums
+
+/**
+ * 非阻塞模式
+ */
+public class SocketDemo {
+
+    @Test
+    public void client() throws IOException {
+        //1. 获取通道
+        SocketChannel s = SocketChannel.open(new InetSocketAddress("127.0.0.1",8080));
+        //2. 切换非阻塞模式
+        s.configureBlocking(false);
+        //3.分配指定大小的缓冲区
+        ByteBuffer bb = ByteBuffer.allocate(1024);
+        //4.发送数据给服务端
+        bb.put(new Date().toString().getBytes());
+        bb.flip();
+        s.write(bb);
+        bb.clear();
+        s.close();
+
+    }
+
+    @Test
+    public void server() throws IOException {
+        //1.获取通道
+        ServerSocketChannel ssc = ServerSocketChannel.open();
+        //2.切换非阻塞模式
+        ssc.configureBlocking(false);
+        //3.绑定连接
+        ssc.bind(new InetSocketAddress(8080));
+        //4.获取选择器
+        Selector selector = Selector.open();
+        //5.将通道注册到选择器
+        ssc.register(selector, SelectionKey.OP_ACCEPT);
+        //6.轮询式的获取选择器上已经“准备就绪”的事件
+        while(selector.select()>0){
+            //7.获取当前选择器中所有注册的“选择键（已经及就绪的监听事件）”
+            Iterator<SelectionKey> it = selector.selectedKeys().iterator();
+            while(it.hasNext()){
+                //8.获取准备“就绪”的事件
+                SelectionKey sk = it.next();
+
+                //9.判断具体是什么事件准备就绪
+                if(sk.isAcceptable()){
+                    //10.若“接收就绪”，获取客户端连接
+                    SocketChannel sChannel = ssc.accept();
+                    //11.切换费阻塞模式
+                    sChannel.configureBlocking(false);
+                    //12.将该通道注册到选择器上
+                    sChannel.register(selector,SelectionKey.OP_READ);
+                }else if(sk.isReadable()){
+                    //13.获取当前选择器上“读就绪”状态的通道
+                    SocketChannel sChannel = (SocketChannel) sk.channel();
+                    //14.读取数据
+                    ByteBuffer buf = ByteBuffer.allocate(1024);
+                    int len = 0;
+                    while((len = sChannel.read(buf))>0){
+                        buf.flip();
+                        System.out.println(new String(buf.array(),0,len));
+                        buf.clear();
+                    }
+                }
+                //15.取消选择键
+                it.remove();
+            }
+
+        }
+
+    }
+
+
+}
+
+```
+
+
 
 
 
