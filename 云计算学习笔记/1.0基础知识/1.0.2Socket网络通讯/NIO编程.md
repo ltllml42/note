@@ -503,7 +503,6 @@ public class SocketDemo {
             while(it.hasNext()){
                 //8.获取准备“就绪”的事件
                 SelectionKey sk = it.next();
-
                 //9.判断具体是什么事件准备就绪
                 if(sk.isAcceptable()){
                     //10.若“接收就绪”，获取客户端连接
@@ -527,12 +526,8 @@ public class SocketDemo {
                 //15.取消选择键
                 it.remove();
             }
-
         }
-
     }
-
-
 }
 
 ```
