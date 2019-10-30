@@ -243,9 +243,6 @@ public class Test004 {
 	}
 
 ```
-
-
-
 ## 通道（Channel）
  通道（Channel）：由 java.nio.channels 包定义 的。Channel 表示 IO 源与目标打开的连接。 Channel 类似于传统的“流”。只不过 Channel 本身不能直接访问数据，Channel 只能与 Buffer 进行交互
  ![](https://github.com/ltllml42/img/2019/10/30/1572398751359.png)
@@ -307,6 +304,49 @@ public class Test004 {
 transferFrom()
 transferTo()
 
+### 字符集转化
+```javascript?linenums
+	//字符集
+	@Test
+	public void test6() throws IOException{
+		Charset cs1 = Charset.forName("GBK");
+		
+		//获取编码器
+		CharsetEncoder ce = cs1.newEncoder();
+		
+		//获取解码器
+		CharsetDecoder cd = cs1.newDecoder();
+		
+		CharBuffer cBuf = CharBuffer.allocate(1024);
+		cBuf.put("尚硅谷威武！");
+		cBuf.flip();
+		
+		//编码
+		ByteBuffer bBuf = ce.encode(cBuf);
+		
+		for (int i = 0; i < 12; i++) {
+			System.out.println(bBuf.get());
+		}
+		
+		//解码
+		bBuf.flip();
+		CharBuffer cBuf2 = cd.decode(bBuf);
+		System.out.println(cBuf2.toString());
+		
+		System.out.println("------------------------------------------------------");
+		
+		Charset cs2 = Charset.forName("GBK");
+		bBuf.flip();
+		CharBuffer cBuf3 = cs2.decode(bBuf);
+		System.out.println(cBuf3.toString());
+	}
+	
+
+```
+
+
+
+
 ## 案例：
 ```java
 // 使用直接缓冲区完成文件的复制(内存映射文件)
@@ -348,3 +388,10 @@ transferTo()
 		inChannel.close();
 		fos.close();
 ```
+
+## NIO 网络通信
+
+
+
+
+
