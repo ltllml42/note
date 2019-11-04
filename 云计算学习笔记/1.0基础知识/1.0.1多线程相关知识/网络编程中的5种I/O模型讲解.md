@@ -66,6 +66,8 @@ I/O多路复用是阻塞在select，epoll这样的系统调用，没有阻塞在
 
 
 
+
+
 # 异步IO
 ![异步IO](https://github.com/ltllml42/img/2019/11/1/1572615160966.png)
 
