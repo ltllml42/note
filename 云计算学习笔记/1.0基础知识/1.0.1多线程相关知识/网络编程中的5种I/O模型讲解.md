@@ -24,24 +24,33 @@ grammar_cjkRuby: true
 
 # 信号驱动IO
 ![信号驱动IO](https://github.com/ltllml42/img/2019/11/1/1572615148703.png)
-# IO多路转接
+# IO多路复用
 ![IO多路转接](https://github.com/ltllml42/img/2019/11/1/1572615110605.png)
 
-I/O多路复用是阻塞在select，epoll这样的系统调用，没有阻塞在真正的I/O系统调用如recvfrom
-                进程受阻于select,等待可能多个套接口中的任一个变为可读
-                IO多路复用使用两个系统调用(select和recvfrom)
-                blocking IO只调用了一个系统调用(recvfrom)
-                select/epoll 核心是可以同时处理多个connection，而不是更快，所以连接数不高的话，性能不一定比多线程+阻塞IO好
-                多路复用模型中，每一个socket，设置为non-blocking,
-                阻塞是被select这个函数block，而不是被socket阻塞的
-				
-				
-什么是IO多路复用：
-            I/O多路复用，I/O是指网络I/O, 多路指多个TCP连接(即socket或者channel），复用指复用一个或几个线程。
+## 什么是IO多路复用：
+I/O多路复用，I/O是指网络I/O, 多路指多个TCP连接(即socket或者channel），复用指复用一个或几个线程。
             简单来说：就是使用一个或者几个线程处理多个TCP连接
             最大优势是减少系统开销小，不必创建过多的进程/线程，也不必维护这些进程/线程
+
+## 常用应用场景是什么？
+客户端要处理多个socket
+客户端同时处理连接和用户输入，比如聊天室
+TCP服务器要同时处理监听socket和连接socket
+服务器同时处理TCP和UDP
+服务器要监听多个端口
+
+**举例**
+I/O框架libevent
+基于libevent和协程的python网络框架gevent
+python的高性能web框架tornado
+redis文件事件处理器
+nginx，apache事件模型
+
+## 多路复用的实现方式
+
+![多路复用的对比](./images/1572996505571.png)
 				
-## select
+### select
 基本原理：
 	监视文件3类描述符： writefds、readfds、和exceptfds
 	调用后select函数会阻塞住，等有数据 可读、可写、出异常 或者 超时 就会返回
@@ -49,16 +58,21 @@ I/O多路复用是阻塞在select，epoll这样的系统调用，没有阻塞在
 	几乎在所有的平台上支持，跨平台支持性好
 
 缺点：
-	1）select采用轮询的方式扫描文件描述符，全部扫描，随着文件描述符FD数量增多而性能下降
+	1）select采用**轮询**的方式扫描文件描述符，全部扫描，随着文件描述符FD数量增多而性能下降
 	2）每次调用 select()，需要把 fd 集合从用户态拷贝到内核态，并进行遍历(消息传递都是从内核到用户空间)
 	2）最大的缺陷就是单个进程打开的FD有限制，默认是1024   （可修改宏定义，但是效率仍然慢）
 		static final  int MAX_FD = 1024
 
-## poll 
+### poll 
 基本流程：
 	select() 和 poll() 系统调用的大体一样，处理多个描述符也是使用轮询的方式，根据描述符的状态进行处理
 	一样需要把 fd 集合从用户态拷贝到内核态，并进行遍历。
 	最大区别是: poll没有最大文件描述符限制（使用链表的方式存储fd）
+	
+	
+	
+	
+### epoll	
 
 
 
