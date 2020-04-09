@@ -37,6 +37,9 @@ I/O多路复用，I/O是指网络I/O, 多路指多个TCP连接(即socket或者ch
 客户端同时处理连接和用户输入，比如聊天室
 TCP服务器要同时处理监听socket和连接socket
 服务器同时处理TCP和UDP
+
+![Diagram](./attachments/1585189700496.drawio.html)
+
 服务器要监听多个端口
 
 **举例**
@@ -52,6 +55,9 @@ nginx，apache事件模型
 				
 ### select
 基本原理：
+
+![Diagram](./attachments/1585121189180.drawio.html)
+
 	监视文件3类描述符： writefds、readfds、和exceptfds
 	调用后select函数会阻塞住，等有数据 可读、可写、出异常 或者 超时 就会返回
 	select函数正常返回后，通过遍历fdset整个数组才能发现哪些句柄发生了事件，来找到就绪的描述符fd，然后进行对应的IO操作
